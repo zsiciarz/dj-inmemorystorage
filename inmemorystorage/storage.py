@@ -2,8 +2,11 @@ import urlparse
 
 from django.conf import settings
 from django.core.files.storage import Storage
-from django.core.files.base import ContentFile
-from django.utils.encoding import filepath_to_uri
+from django.core.files.base import File
+from django.utils.encoding import filepath_to_uri, python_2_unicode_compatible, force_bytes
+from io import StringIO, BytesIO
+import six
+
 
 class PathDoesNotExist(Exception):
     pass
@@ -18,13 +21,38 @@ class InMemoryNode(object):
         child.parent = self
         self.children[name] = child
 
-class InMemoryFile(InMemoryNode):
+class InMemoryFile(InMemoryNode, File):
     """
-    Stores contents of file and stores reference to parent.
+    Stores contents of file and stores reference to parent. File interface is identical
+    to ContentFile, except that self.size works even after data has been written to it
     """
-    def __init__(self, contents='', parent=None):
-        self.contents = contents
+    def __init__(self, content='', parent=None, name=None):
+        #init InMemoryNode
         self.parent = parent
+
+        #init File
+        if six.PY3:
+            stream_class = StringIO if isinstance(content, six.text_type) else BytesIO
+        else:
+            stream_class = six.BytesIO
+            content = force_bytes(content)
+        File.__init__(self, stream_class(content), name=name)
+
+    def __str__(self):
+        return '<InMemoryFile: %s>' % self.name
+
+    def __bool__(self):
+        return True
+
+    def __nonzero__(self):      # Python 2 compatibility
+        return type(self).__bool__(self)
+
+    def open(self, mode=None):
+        self.seek(0)
+
+    def close(self):
+        pass
+
 
 class InMemoryDir(InMemoryNode):
     """
@@ -45,7 +73,7 @@ class InMemoryDir(InMemoryNode):
                 return self.children[current]
             if not create:
                 raise PathDoesNotExist()
-            node = InMemoryFile()
+            node = InMemoryFile(name=current)
             self.add_child(current, node)
             return node
         if current in self.children.keys():
@@ -81,14 +109,17 @@ class InMemoryDir(InMemoryNode):
             return True
 
     def size(self, name):
-        return len(self.resolve(name).contents)
+        return self.resolve(name).size
 
-    def open(self, path):
-        return ContentFile(self.resolve(path, create=True).contents)
+    def open(self, path, mode="r"):
+        create = "w" in mode
+        f = self.resolve(path, create=create)
+        f.open(mode)
+        return f
 
     def save(self, path, content):
-        file = self.resolve(path, create=True)
-        file.contents = content
+        with self.open(path, "w") as f:
+            f.write(content)
         return path
 
 class InMemoryStorage(Storage):
@@ -114,8 +145,8 @@ class InMemoryStorage(Storage):
     def size(self, name):
         return self.filesystem.size(name)
 
-    def _open(self, name, mode=None):
-        return self.filesystem.open(name)
+    def _open(self, name, mode="r"):
+        return self.filesystem.open(name, mode)
 
     def _save(self, name, content):
         return self.filesystem.save(name, content.read())
