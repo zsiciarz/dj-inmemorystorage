@@ -1,25 +1,26 @@
-import os
-from distutils.core import setup
+from setuptools import setup
 
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
-
-README = read('README.rst')
+requires = ['Django >= 1.4']
+tests_require = requires
 
 setup(
-    name = "django-inmemorystorage",
-    version = "0.1.1",
-    url = 'http://github.com/codysoyland/django-inmemorystorage',
-    license = 'BSD',
-    description = "A non-persistent in-memory data storage backend for Django.",
-    long_description = README,
-    author = 'Cody Soyland',
-    author_email = 'cody@soyland.com',
-    packages = [
+    name="dj-inmemorystorage",
+    description="A non-persistent in-memory data storage backend for Django.",
+    version="1.0.0",
+    url="https://github.com/waveaccounting/django-inmemorystorage",
+    license=open('LICENSE').read(),
+    long_description=open('README.rst').read(),
+    author='Cody Soyland, Seán Hayes, Tore Birkeland, Nick Presta',
+    author_email='opensource@waveapps.com',
+    packages=[
         'inmemorystorage',
     ],
-    classifiers = [
-        'Development Status :: 4 - Beta',
+    zip_safe=True,
+    install_requires=requires,
+    tests_require=tests_require,
+    test_suite='inmemorystorage.storage_tests',
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
         'Framework :: Django',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',

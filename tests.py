@@ -2,9 +2,13 @@ import unittest
 from inmemorystorage import InMemoryStorage
 from inmemorystorage.storage import InMemoryDir, InMemoryFile
 from django.core.files.base import ContentFile
+from django.conf import settings
+
 
 class MemoryStorageTests(unittest.TestCase):
     def setUp(self):
+        if not settings.configured:
+            settings.configure(MEDIA_URL='')
         self.storage = InMemoryStorage()
         self.filesystem = self.storage.filesystem
 
