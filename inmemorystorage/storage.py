@@ -1,15 +1,21 @@
+from io import StringIO, BytesIO
+import os
 import urlparse
 
 from django.conf import settings
 from django.core.files.storage import Storage
 from django.core.files.base import File
-from django.utils.encoding import filepath_to_uri, python_2_unicode_compatible, force_bytes
-from io import StringIO, BytesIO
+try:
+    from django.utils.encoding import filepath_to_uri, force_bytes
+except ImportError:
+    # django.utils.encoding.force_bytes doesn't exist in < 1.5
+    from django.utils.encoding import smart_str as force_bytes
 import six
 
 
 class PathDoesNotExist(Exception):
     pass
+
 
 class InMemoryNode(object):
     """
@@ -20,6 +26,7 @@ class InMemoryNode(object):
     def add_child(self, name, child):
         child.parent = self
         self.children[name] = child
+
 
 class InMemoryFile(InMemoryNode, File):
     """
@@ -46,6 +53,14 @@ class InMemoryFile(InMemoryNode, File):
 
     def __nonzero__(self):      # Python 2 compatibility
         return type(self).__bool__(self)
+
+    @property
+    def _size(self):
+        pos = self.file.tell()
+        self.file.seek(0, os.SEEK_END)
+        size = self.file.tell()
+        self.file.seek(pos)
+        return size
 
     def open(self, mode=None):
         self.seek(0)
@@ -122,13 +137,14 @@ class InMemoryDir(InMemoryNode):
             f.write(content)
         return path
 
+
 class InMemoryStorage(Storage):
     """
     Django storage class for in-memory filesystem.
     """
     def __init__(self, filesystem=None, base_url=None):
         self.filesystem = filesystem or InMemoryDir()
-        
+
         if base_url is None:
             base_url = settings.MEDIA_URL
         self.base_url = base_url
@@ -150,9 +166,8 @@ class InMemoryStorage(Storage):
 
     def _save(self, name, content):
         return self.filesystem.save(name, content.read())
-    
+
     def url(self, name):
         if self.base_url is None:
             raise ValueError("This file is not accessible via a URL.")
         return urlparse.urljoin(self.base_url, filepath_to_uri(name))
-

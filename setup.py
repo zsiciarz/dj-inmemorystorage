@@ -20,7 +20,7 @@ setup(
     zip_safe=True,
     install_requires=requires,
     tests_require=tests_require,
-    test_suite='inmemorystorage.storage_tests',
+    test_suite='tests',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Framework :: Django',
