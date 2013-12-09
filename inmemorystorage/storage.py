@@ -104,17 +104,17 @@ class InMemoryDir(InMemoryNode):
         return self.children[current].resolve(rest, create)
 
     def ls(self, path=''):
-        return self.resolve(path).children.keys()
+        return list(self.resolve(path).children.keys())
 
     def listdir(self, dir):
-        nodes = tuple(self.resolve(dir).children.iteritems())
+        nodes = tuple(six.iteritems(self.resolve(dir).children))
         dirs = [k for (k, v) in nodes if isinstance(v, InMemoryDir)]
         files = [k for (k, v) in nodes if isinstance(v, InMemoryFile)]
         return [dirs, files]
 
     def delete(self, path):
         node = self.resolve(path)
-        for name, child in node.parent.children.iteritems():
+        for name, child in six.iteritems(node.parent.children):
             if child is node:
                 del node.parent.children[name]
                 break
