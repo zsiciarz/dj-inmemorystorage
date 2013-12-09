@@ -1,6 +1,10 @@
 from io import StringIO, BytesIO
 import os
-import urlparse
+try:
+    from urlparse import urljoin
+except ImportError:
+    from urllib.parse import urljoin
+
 
 from django.conf import settings
 from django.core.files.storage import Storage
@@ -170,4 +174,4 @@ class InMemoryStorage(Storage):
     def url(self, name):
         if self.base_url is None:
             raise ValueError("This file is not accessible via a URL.")
-        return urlparse.urljoin(self.base_url, filepath_to_uri(name))
+        return urljoin(self.base_url, filepath_to_uri(name))
