@@ -2,7 +2,8 @@
 dj-inmemorystorage
 ======================
 
-.. image:: https://travis-ci.org/waveaccounting/dj-inmemorystorage.png?branch=master   :target: https://travis-ci.org/waveaccounting/dj-inmemorystorage
+.. image:: https://travis-ci.org/waveaccounting/dj-inmemorystorage.png?branch=master
+   :target: https://travis-ci.org/waveaccounting/dj-inmemorystorage
 
 A non-persistent in-memory data storage backend for Django.
 
@@ -38,3 +39,10 @@ also bumps the version to ``1.0.0`` and renames it to dj-inmemorystorage such th
 
 The biggest difference is that this package works with Django 1.4 now (previously only 1.5+).
 It also supports Python 2.6/2.7 with Django 1.4+ and Python 3.2/3.3 with Django 1.5+.
+
+============
+Contributing
+============
+
+1. Ensure that you open a pull request
+2. All feature additions/bug fixes MUST include tests
