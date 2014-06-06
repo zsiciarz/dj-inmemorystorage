@@ -43,7 +43,7 @@ class InMemoryFile(InMemoryNode, File):
     Stores contents of file and stores reference to parent. File interface is identical
     to ContentFile, except that self.size works even after data has been written to it
     """
-    def __init__(self, content='', parent=None, name=None):
+    def __init__(self, content=b'', parent=None, name=None):
         #init InMemoryNode
         self.parent = parent
         self.created_at = timezone.now()
