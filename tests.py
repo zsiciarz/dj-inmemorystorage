@@ -1,8 +1,10 @@
+import time
 import unittest
 from inmemorystorage import InMemoryStorage
 from inmemorystorage.storage import InMemoryDir, InMemoryFile
 from django.core.files.base import ContentFile
 from django.conf import settings
+from django.test.utils import override_settings
 
 
 class MemoryStorageTests(unittest.TestCase):
@@ -81,6 +83,62 @@ class MemoryStorageTests(unittest.TestCase):
         self.assertEqual(self.storage.delete('dir/subdir/file2'), None)
         self.assertEqual(self.storage.exists('dir/subdir/file2'), False)
         self.assertEqual(self.storage.listdir('dir/subdir'), [[], []])
+
+    @override_settings(MEDIA_URL=None)
+    def test_url(self):
+        # main storage not instantiated with a base url so should raise not
+        # implemented.
+        storage = InMemoryStorage()
+
+        self.assertRaises(ValueError, storage.url, ('file0',))
+
+        storage = InMemoryStorage(base_url='http://www.example.com')
+
+        self.assertEqual(storage.url('file0'), 'http://www.example.com/file0')
+
+    def test_modified_time(self):
+        self.storage.save('file', ContentFile('test'))
+        modified_time = self.storage.modified_time('file')
+
+        self.storage.delete('file')
+
+        time.sleep(0.1)
+
+        self.storage.save('file', ContentFile('test-again'))
+        new_modified_time = self.storage.modified_time('file')
+        self.assertTrue(new_modified_time > modified_time)
+
+    def test_accessed_time(self):
+        self.storage.save('file', ContentFile('test'))
+
+        self.storage.open('file', 'r')
+        accessed_time = self.storage.accessed_time('file')
+
+        time.sleep(0.1)
+
+        self.storage.open('file', 'r')
+        new_accessed_time = self.storage.accessed_time('file')
+        self.assertTrue(new_accessed_time > accessed_time)
+
+    def test_created_time(self):
+        self.storage.save('file', ContentFile('test'))
+        created_time = self.storage.created_time('file')
+
+        time.sleep(0.1)
+
+        # make sure opening it doesn't change creation time.
+        file = self.storage.open('file', 'r')
+
+        after_open_created_time = self.storage.created_time('file')
+        self.assertEqual(after_open_created_time, created_time)
+
+        # make sure writing to it doesn't change creation time.
+        file.write('test-test-test')
+        self.storage.save('file', file)
+
+        after_write_created_time = self.storage.created_time('file')
+        self.assertEqual(after_write_created_time, created_time)
+
 
 if __name__ == '__main__':
     unittest.main()
