@@ -14,7 +14,7 @@ Supported Versions
 ==================
 
 Python 2.6/2.7 with Django 1.4+
-Python 3.2/3.3 with Django 1.5+
+Python 3.2/3.3/3.4 with Django 1.5+
 
 =====
 Usage
@@ -38,7 +38,7 @@ Wave's modifications include packaging, and test modifications such that ``pytho
 also bumps the version to ``1.0.0`` and renames it to dj-inmemorystorage such that it doesn't conflict on PyPI.
 
 The biggest difference is that this package works with Django 1.4 now (previously only 1.5+).
-It also supports Python 2.6/2.7 with Django 1.4+ and Python 3.2/3.3 with Django 1.5+.
+It also supports Python 2.6/2.7 with Django 1.4+ and Python 3.2/3.3/3.4 with Django 1.5+.
 
 ============
 Contributing
