@@ -16,6 +16,12 @@ except ImportError:
     from django.utils.encoding import smart_str as force_bytes
 import six
 
+from django.core.files.storage import Storage
+from django.core.files.base import ContentFile
+from django.utils.encoding import filepath_to_uri
+from django.utils.six.moves.urllib.parse import urljoin
+from django.utils import timezone
+
 
 class PathDoesNotExist(Exception):
     pass
@@ -40,6 +46,9 @@ class InMemoryFile(InMemoryNode, File):
     def __init__(self, content='', parent=None, name=None):
         #init InMemoryNode
         self.parent = parent
+        self.created_at = timezone.now()
+        self.last_modified = timezone.now()
+        self.last_accessed = timezone.now()
 
         #init File
         if six.PY3:
@@ -134,11 +143,13 @@ class InMemoryDir(InMemoryNode):
         create = "w" in mode
         f = self.resolve(path, create=create)
         f.open(mode)
+        f.last_accessed = timezone.now()
         return f
 
     def save(self, path, content):
         with self.open(path, "w") as f:
             f.write(content)
+        f.last_modified = timezone.now()
         return path
 
 
@@ -175,3 +186,15 @@ class InMemoryStorage(Storage):
         if self.base_url is None:
             raise ValueError("This file is not accessible via a URL.")
         return urljoin(self.base_url, filepath_to_uri(name))
+
+    def modified_time(self, name):
+        file = self.filesystem.resolve(name)
+        return file.last_modified
+
+    def accessed_time(self, name):
+        file = self.filesystem.resolve(name)
+        return file.last_accessed
+
+    def created_time(self, name):
+        file = self.filesystem.resolve(name)
+        return file.created_at
